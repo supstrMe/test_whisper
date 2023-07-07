@@ -5,6 +5,9 @@ import torch
 from io import BytesIO
 import os
 import base64
+import soundfile as sf
+import scipy.signal as sps
+import numpy as np
 
 
 app = Potassium("my_app")
@@ -29,6 +32,7 @@ def init():
 # @app.handler runs for every call
 @app.handler()
 def handler(context: dict, request: Request) -> Response:
+    SAMPLE_RATE = 16000
     prompt = request.json.get("prompt")
     model = context.get("model")
     outputs = model(prompt)
@@ -37,12 +41,14 @@ def handler(context: dict, request: Request) -> Response:
     if mp3BytesString == None:
         return {'message': "No input provided"}
 
-    mp3Bytes = BytesIO(base64.b64decode(mp3BytesString.encode("ISO-8859-1")))
-    with open('input.mp3', 'wb') as file:
-        file.write(mp3Bytes.getbuffer())
+    output, samplerate = sf.read(BytesIO(base64.b64decode(mp3BytesString.encode("ISO-8859-1"))))
+    if samplerate != SAMPLE_RATE:
+        number_of_samples = round(len(output) * float(SAMPLE_RATE) / samplerate)
+        output = sps.resample(output, number_of_samples)
+    output = np.array(output).astype(np.float32)
 
     # Run the model
-    result = model.transcribe("input.mp3")
+    result = model.transcribe(output)
     os.remove("input.mp3")
 
     return Response(
