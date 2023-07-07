@@ -33,9 +33,6 @@ def init():
 @app.handler()
 def handler(context: dict, request: Request) -> Response:
     SAMPLE_RATE = 16000
-    prompt = request.json.get("prompt")
-    model = context.get("model")
-    outputs = model(prompt)
 
     mp3BytesString = request.get('mp3BytesString', None)
     if mp3BytesString == None:
