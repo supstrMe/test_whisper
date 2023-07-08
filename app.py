@@ -35,7 +35,7 @@ def handler(context: dict, request: Request) -> Response:
     SAMPLE_RATE = 16000
     model = context.get("model")
 
-    mp3BytesString = request.get('mp3BytesString', None)
+    mp3BytesString = context.get('mp3BytesString', None)
     if mp3BytesString == None:
         return {'message': "No input provided"}
 
